@@ -255,7 +255,7 @@ server <- function(input, output) {
   })
   
   output$pieNO2 <- renderPlot({
-    category <- c("CO as Main Pollutant", "CO Not Main Pollutant")
+    category <- c("NO2 as Main Pollutant", "NO2 Not Main Pollutant")
     #sd <- selected_data()
     sd <- subset(selected_data(), select = Days.CO:Days.PM10)
     Days <- c(sd["Days.NO2"], sum(sd["Days.CO"], sd["Days.Ozone"], sd["Days.SO2"], sd["Days.PM2.5"], sd["Days.PM10"])) 
@@ -265,7 +265,7 @@ server <- function(input, output) {
   })
   
   output$pieOzone <- renderPlot({
-    category <- c("CO as Main Pollutant", "CO Not Main Pollutant")
+    category <- c("Ozone as Main Pollutant", "Ozone Not Main Pollutant")
     #sd <- selected_data()
     sd <- subset(selected_data(), select = Days.CO:Days.PM10)
     Days <- c(sd["Days.Ozone"], sum(sd["Days.NO2"], sd["Days.CO"], sd["Days.SO2"], sd["Days.PM2.5"], sd["Days.PM10"])) 
@@ -275,7 +275,7 @@ server <- function(input, output) {
   })
   
   output$pieSO2 <- renderPlot({
-    category <- c("CO as Main Pollutant", "CO Not Main Pollutant")
+    category <- c("SO2 as Main Pollutant", "SO2 Not Main Pollutant")
     #sd <- selected_data()
     sd <- subset(selected_data(), select = Days.CO:Days.PM10)
     Days <- c(sd["Days.SO2"], sum(sd["Days.NO2"], sd["Days.Ozone"], sd["Days.CO"], sd["Days.PM2.5"], sd["Days.PM10"])) 
@@ -315,6 +315,7 @@ server <- function(input, output) {
     )
     
     ggplot(lines, aes(Year)) + geom_line(aes(y = Max, color = "Max")) + geom_line(aes(y = X90th, color = "X90th")) + geom_line(aes(y = Median, color = "Median")) 
+     
   })
   
   #read in line graph for main pollutant over the year
