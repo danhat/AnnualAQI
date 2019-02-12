@@ -1,10 +1,7 @@
 #
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
+# Author: Danielle Hatten
+# Annual Air Quality Application
+# February 11, 2019 
 #
 
 library(shiny)
