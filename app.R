@@ -103,56 +103,56 @@ ui <- dashboardPage(
     ")), # end tags$head
     
     
-    fluidRow( 
+   fluidRow(
       column(4, offset = 0,
-        box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = 8, dataTableOutput("table1", height = 300))
+        box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = NULL, dataTableOutput("table1", height = 300))
       ),
-      column(4,
-        box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = 8, plotOutput("pie1", height = 300))
+      column(4, offset = 0,
+        box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pie1", height = 300))
       ),
-      column(4,
-        box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = 8, plotOutput("bar1", height = 300))
+      column(4, offset = 0,
+        box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("bar1", height = 300))
       ),
-      column(4,
-        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("line1", height = 300))
+      column(4, offset = 0,
+        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("line1", height = 300))
       )
     
     ),
     
     fluidRow( 
-      column(4,            
-        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, dataTableOutput("table2", height = 300))
+      column(4, offset = 0,           
+        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, dataTableOutput("table2", height = 300))
       ),
-      column(4,
-        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("bar2", height = 300))
+      column(4, offset = 0,
+        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("bar2", height = 300))
       ),
-      column(4,
-        box(title = "Days with Pullutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("line2", height = 300))
+      column(4, offset = 0,
+        box(title = "Days with Pullutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("line2", height = 300))
       ),
-      column(4,
-        box(title = "Location", solidHeader = TRUE, status = "primary", width = 8, leafletOutput("leaf", height = 300))
+      column(4, offset = 0,
+        box(title = "Location", solidHeader = TRUE, status = "primary", width = NULL, leafletOutput("leaf", height = 300))
       )
     ),      
         
     fluidRow(
       # pollutants pie charts
-      column(4,
-        box(title = "CO as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("pieCO", height = 300))
+      column(3, offset = 0,
+        box(title = "CO as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieCO", height = 300))
       ),
-      column(4,
-        box(title = "NO2 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("pieNO2", height = 300))
+      column(3, offset = 0,
+        box(title = "NO2 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieNO2", height = 300))
       ),
-      column(4,
-        box(title = "Ozone as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("pieOzone", height = 300))
+      column(3, offset = 0,
+        box(title = "Ozone as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieOzone", height = 300))
       ),
-      column(4,
-        box(title = "SO2 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("pieSO2", height = 300))
+      column(3, offset = 0,
+        box(title = "SO2 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieSO2", height = 300))
       ),
-      column(4,
-        box(title = "PM2.5 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("piePM25", height = 300))
+      column(3, offset = 0,
+        box(title = "PM2.5 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("piePM25", height = 300))
       ),
-      column(4,
-        box(title = "PM10 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = 8, plotOutput("piePM10", height = 300))
+      column(3, offset = 0,
+        box(title = "PM10 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("piePM10", height = 300))
       )      
     )
     
