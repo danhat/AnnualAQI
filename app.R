@@ -1,6 +1,6 @@
 #
 # Author: Danielle Hatten
-# Annual Air Quality Application
+# Annual Air Quality Interactive Application
 # February 11, 2019 
 #
 
@@ -9,7 +9,6 @@ library(shinydashboard)
 library(ggplot2)
 library(lubridate)
 library(DT)
-library(jpeg)
 library(grid)
 library(leaflet)
 library(scales)
@@ -22,9 +21,9 @@ aqi_data <- subset(temp_data2, Days.with.AQI > -1)
 
 # values for selectInputs
 years <- c(2018:1980)
-states2 <- subset(aqi_data[, 1], aqi_data$Year == 2018)
-states <- unique(states2)
-counties <- subset(aqi_data[, 2], aqi_data$Year == 2018 & aqi_data$State == "Illinois")
+
+states <- unique(subset(aqi_data[, 1], aqi_data$Year == 2018))
+#counties <- unique(subset(aqi_data[, 2], aqi_data$Year == 2018 & aqi_data$State == "Illinois"))
 
 # data for showing location on a map
 aqs <- read.csv("aqs_sites.csv")
@@ -38,7 +37,8 @@ ui <- dashboardPage(
     disable = FALSE, collapsed = FALSE,
     selectInput("Year", "Select a year", years, selected = 2018),
     selectInput("State", "Select a state", states, selected = states[15]),
-    selectInput("County", "Select a county", counties, selected = counties[4]),
+    #selectInput("County", "Select a county", counties, selected = counties[4]),
+    uiOutput("County"),
 
     h3("
       Annual AQI App by Danielle Hatten."),
@@ -86,101 +86,98 @@ ui <- dashboardPage(
           background-color: #0D579B;
         }
         
-        .content-wrapper {
-          background-color: white !important;
-        }  
+       
 
-        #final_text {
-          text-align: center;
-          text-font: Verdana;
+        .skin-blue .box.box-solid.box-primary .box-header {
+          color: #fff;
+          background: #0D579B;
+          background-color: #0d579b;
         }
-
-        
 
         
                  
     ")), # end tags$head
     
     
-    fluidRow(
-      column(3, offset = 0,
+    fluidRow( # start row
+      column(4, offset = 0,
         box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = NULL, dataTableOutput("table1", height = 300))
       ),
-      column(3, offset = 0,
+      column(4, offset = 0,
         box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pie1", height = 300))
       ),
-      column(3, offset = 0,
+      column(4, offset = 0,
         box(title = "AQI Level Throughout the Year", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("bar1", height = 300))
       ),
-      column(3, offset = 0,
-        box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("line1", height = 300))
+      column(4, offset = 0,
+        box(title = "AQI Category from 1980-2018", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("line1", height = 300))
       )
     
-    ),
+    ), # end row
     
-    fluidRow( 
-      column(3, offset = 0,           
+    fluidRow( # start row
+      column(4, offset = 0,           
         box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, dataTableOutput("table2", height = 300))
       ),
-      column(3, offset = 0,
+      column(4, offset = 0,
         box(title = "Days with Pollutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("bar2", height = 300))
       ),
-      column(3, offset = 0,
+      column(4, offset = 0,
         box(title = "Days with Pullutant as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("line2", height = 300))
       ),
-      column(3, offset = 0,
+      column(4, offset = 0,
         box(title = "Location", solidHeader = TRUE, status = "primary", width = NULL, leafletOutput("leaf", height = 300))
       )
-    ),      
+    ), # end row  
         
-    fluidRow(
+    fluidRow( # start row
       # pollutants pie charts
-      column(2, offset = 0,
+      column(4, offset = 0,
         box(title = "CO as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieCO", height = 300))
       ),
-      column(2, offset = 0,
+      column(4, offset = 0,
         box(title = "NO2 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieNO2", height = 300))
       ),
-      column(2, offset = 0,
+      column(4, offset = 0,
         box(title = "Ozone as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieOzone", height = 300))
       ),
-      column(2, offset = 0,
+      column(4, offset = 0,
         box(title = "SO2 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pieSO2", height = 300))
       ),
-      column(2, offset = 0,
+      column(4, offset = 0,
         box(title = "PM2.5 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("piePM25", height = 300))
       ),
-      column(2, offset = 0,
+      column(4, offset = 0,
         box(title = "PM10 as the Main Pollutant", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("piePM10", height = 300))
       )      
-    )
-    
+    ) # end row
     
   ) # end dashboardBody
+
 ) # end dashboardPage
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  # increase font size
   theme_set(theme_grey(base_size = 18))
   
   # reactive function to update counties list
-  counties_reactive <- reactive({subset(states[, 2], aqi_data$State == input$State & aqi_data$Year == 2018)})
+  # counties_reactive <- reactive({subset(states[, 2], aqi_data$State == input$State & aqi_data$Year == 2018)})
   
   # selected data for a selected selected county, state, and year
   selected_data <- reactive({subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = Days.with.AQI:Days.PM10)})
   
   # get data for line graphs
-  line1_data <- reactive({subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = Max.AQI:Median.AQI)})
-  line2_data <- reactive({subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = Days.with.AQI:Days.PM10)})
+  line1_data <- reactive({subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = Year & Max.AQI:Median.AQI)})
+  line2_data <- reactive({subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = Year & Days.with.AQI:Days.PM10)})
   
   # get data for showing location on a map
   map_values <- reactive({subset(aqs, (aqs$State.Name) == (input$State) & (aqs$County.Name) == (input$County), select = Latitude:Longitude)})
 
-  # update counties list
-  #output$County <- renderUI({
-    #selectInput("County2", "Select a county", counties_reactive())
-  #})
+  # change county listbased on selected state
+  output$County <- renderUI ({
+    counties <- unique(subset(aqi_data[, 2], aqi_data$Year == input$Year & aqi_data$State == input$State))
+    selectInput("County", "Select a County", counties, selected = counties[1])
+  })
 
   # read in a table AQI of days of selected year
   output$table1 <- DT::renderDataTable(
@@ -213,7 +210,7 @@ server <- function(input, output) {
   
   # read in a bar chart for AQI of days for selected year
   output$bar1 <- renderPlot({
-    Level <- c("Good", "Moderate", "Unhealthy for Sensitive", "Unhealthy", "Very Unhealthy", "Hazardous")
+    Level <- c("Good", "Moderate", "Unhealthy\nfor\nSensitive", "Unhealthy", "Very\nUnhealthy", "Hazardous")
     ccd <- selected_data()
     Days <- c(ccd["Good.Days"], ccd["Moderate.Days"], ccd["Unhealthy.for.Sensitive.Groups.Days"], ccd["Unhealthy.Days"], ccd["Very.Unhealthy.Days"], ccd["Hazardous.Days"]) 
     df <- data.frame(Level,Days)
@@ -295,8 +292,7 @@ server <- function(input, output) {
   })
   
   output$piePM10 <- renderPlot({
-    category <- c("PM10 as Main Pollutant", "PM10 Not Main Pollutant")
-    #sd <- selected_data()
+    category <- c("PM10 as the Main Pollutant", "PM10 not the Main Pollutant")
     sd <- subset(selected_data(), select = Days.CO:Days.PM10)
     Days <- c(sd["Days.PM10"], sum(sd["Days.NO2"], sd["Days.Ozone"], sd["Days.SO2"], sd["Days.PM2.5"], sd["Days.CO"])) 
     
@@ -307,14 +303,15 @@ server <- function(input, output) {
   # read in pie chart for max, 90th percentile, and median AQI over the years
   output$line1 <- renderPlot({
     data <- line1_data()
+
     lines <- data.frame(
-      Year = c(1980:2018),
+      Year = data[, "Year"], #c(1980:2018),
       Max = data[, "Max.AQI"],
       X90th = data[, "X90th.Percentile.AQI"],
       Median = data[, "Median.AQI"]
     )
-    
-    ggplot(lines, aes(Year)) + geom_line(aes(y = Max, color = "Max")) + geom_line(aes(y = X90th, color = "X90th")) + geom_line(aes(y = Median, color = "Median")) 
+    # ggtitle for total days
+    ggplot(lines, aes(Year)) + geom_line(aes(y = Max, color = "Max")) + geom_line(aes(y = X90th, color = "X90th")) + geom_line(aes(y = Median, color = "Median")) + xlab("Year") + ylab("Days")
      
   })
   
@@ -322,7 +319,7 @@ server <- function(input, output) {
   output$line2 <- renderPlot({
     data <- line2_data()
     lines <- data.frame(
-      Year = c(1980:2018),
+      Year = data[, "Years"],
       CO = data[, "Days.CO"],
       NO2 = data[, "Days.NO2"],
       Ozone = data[, "Days.Ozone"],
@@ -331,7 +328,7 @@ server <- function(input, output) {
       PM10 = data[, "Days.PM10"]
     )
     
-    ggplot(lines, aes(Year)) + geom_line(aes(y = CO, color = "CO")) + geom_line(aes(y = NO2, color = "NO2")) + geom_line(aes(y = Ozone, color = "Ozone")) + geom_line(aes(y = SO2, color = "SO2")) + geom_line(aes(y = PM25, color = "PM25")) + geom_line(aes(y = PM10, color = "PM10")) 
+    ggplot(lines, aes(Year)) + geom_line(aes(y = CO, color = "CO")) + geom_line(aes(y = NO2, color = "NO2")) + geom_line(aes(y = Ozone, color = "Ozone")) + geom_line(aes(y = SO2, color = "SO2")) + geom_line(aes(y = PM25, color = "PM25")) + geom_line(aes(y = PM10, color = "PM10")) + xlab("Year") + ylab("Days")
   })
 
   # map to show the location of the selected area
