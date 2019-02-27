@@ -319,7 +319,7 @@ server <- function(input, output) {
   output$line2 <- renderPlot({
     data <- line2_data()
     lines <- data.frame(
-      Year = data[, "Years"],
+      Year = data[, "Year"],
       CO = data[, "Days.CO"],
       NO2 = data[, "Days.NO2"],
       Ozone = data[, "Days.Ozone"],
