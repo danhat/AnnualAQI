@@ -1,0 +1,67 @@
+body {
+  font-family: Verdana;
+}
+
+.skin-blue .main-header .logo {
+  background-color: #2a3457;
+  color: #ffffff;
+}
+
+  .skin-blue .main-header .logo:hover {
+    background-color: #16235a;
+  }
+
+.skin-blue .main-header .navbar {
+  background-color: #2a3457;
+  color: #ffffff;
+}
+
+.skin-blue .main-header .navbar .sidebar-toggle:hover {
+  background-color: #16235a;
+}
+
+.skin-blue .main-sidebar {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.skin-blue .sidebar {
+  color: #000000;
+}
+
+.skin-blue .content {
+  background-color: #f8f8f8;
+}
+
+.skin-blue .box.box-solid.box-primary .box-header {
+  background-color: #e0e0e0;
+  color: #000000;
+  text-align: center;
+  /*border-bottom: 1px solid #e0e0e0;*/
+}
+
+.skin-blue .box.box-solid.box-primary {
+  /*border: none;*/
+  border: 1px solid #e0e0e0;
+}
+
+.skin-blue .sidebar-menu {
+  padding-top: 20px;
+}
+
+.skin-blue .sidebar a {
+  color: #000000;
+}
+
+.skin-blue .sidebar-menu > li.active > a {
+  color: #fff;
+  background: #2a3457;
+  border-left-color: #e0e0e0;
+}
+
+.skin-blue .sidebar-menu > li:hover > a {
+  background: #2a3457;
+  border-left-color: #2a3457;
+}
+
+
