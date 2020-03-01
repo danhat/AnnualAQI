@@ -7,9 +7,9 @@ body {
   color: #ffffff;
 }
 
-  .skin-blue .main-header .logo:hover {
-    background-color: #16235a;
-  }
+.skin-blue .main-header .logo:hover {
+  background-color: #16235a;
+}
 
 .skin-blue .main-header .navbar {
   background-color: #2a3457;
@@ -63,5 +63,13 @@ body {
   background: #2a3457;
   border-left-color: #2a3457;
 }
+
+#aqi_days {
+  padding-left: 15px;
+  padding-right: 15px;
+  text-align: center;
+}
+
+
 
 
