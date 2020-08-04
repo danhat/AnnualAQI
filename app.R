@@ -1,7 +1,7 @@
 #
 # Author: Danielle Hatten
 # Title: Just Breathe
-# August 2019
+# March 2020
 #
 
 library(shiny)
@@ -24,13 +24,10 @@ library(grid)
 library(viridis)
 library(hrbrthemes)
 
+source("getting_data.R")
 
-# get data from annual aqi files, and merge into one data frame
-aqi_file = list.files(pattern = "annual_aqi_by_county*", recursive = TRUE)
-temp_data <- lapply(aqi_file, read.csv)
-aqi_data <- do.call(rbind, temp_data)
-aqi_data <- data.table(aqi_data)
 
+aqi_data <- get_aqi_data()
 
 
 #aqi_data$State <- factor(aqi_data$State)
@@ -41,7 +38,6 @@ years <- c(2019:1980)
 # states available for the user to select
 states <- data.table(unique(aqi_data[, 1]))
 #levels(droplevels(states))
-
 
 
 # data for showing location on a map
@@ -92,7 +88,6 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Air Quality Index", tabName = "aqi_tab"),
       menuItem("Pollutants", tabName = "pollutants_tab"),
-      menuItem("Comparison", tabName = "comparison_tab"),
 		  menuItem("About", tabName = "about")
 		)
 
@@ -153,32 +148,6 @@ ui <- dashboardPage(
 
       ), # end tabItem
 
-      tabItem("comparison_tab",
-        fluidRow(
-          column(8,
-            wellPanel(
-              fluidRow(
-                column(6, offset = 0,
-                  selectInput("state1", "Select a 1st Location for Comparison", states, selected = states[1]),
-                  selectInput("state2", "Select a 2nd Location for Comparison", states, selected = states[2])
-                ),
-                column(6, offset = 0,
-                  uiOutput("county1"),
-                  uiOutput("county2")
-                )
-              ),
-              fluidRow(
-                column(6, offset = 0,
-                  box(title = "AQI", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("aqi_stacked", height = 400))
-                ),
-                column(6, offset = 0,
-                  box(title = "Pollutants", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pollutants_line", height = 400))
-                )
-              )
-            ) # end well panel
-          ) # end column 8
-        ) # end row
-      ),  # end tab #3
 
       # tab #4
       tabItem("about"
@@ -604,24 +573,7 @@ server <- function(input, output) {
 	
 	
 	
-	# selected data for a selected selected county, state, and year
-	# w/o aqi.days
-	selected_area_pollutants_data <- reactive({
-	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = c("Days.CO", "Days.NO2", "Days.Ozone", "Days.SO2", "Days.PM2.5", "Days.PM10"))
-	})
 	
-	
-	output$pollutants_waffle <- renderPlot({
-	  d <- data.frame(selected_area_pollutants_data())
-	  names(d) <- c("CO", "NO2", "Ozone", "SO2", "PM2.5", "PM10")
-	  
-	  waffle(d[1, ], 
-	         rows = 14,
-	         xlab = "\n1 square = 1 day",
-	         colors = mycolors[],
-	         size = 0.33, 
-	         legend_pos = "bottom")
-  })
 
 
   selected_area_aqi_data <- reactive({
@@ -630,22 +582,22 @@ server <- function(input, output) {
 	
 	
 	output$aqi_waffle <- renderPlot({
-    #d <- data.frame(selected_area_aqi_data())
-    #if (is.null(d)) {
+    d <- data.frame(selected_area_aqi_data())
+    if (is.null(d)) {
 			paste("no data")
-    #}
+    }
 
-    #else {
-     # names(d) <- c("Good", "Moderate", "Unhealthy for Sensitive Groups", "Unhealthy", "Very Unhealthy", "Hazardous")
+    else {
+      names(d) <- c("Good", "Moderate", "Unhealthy for Sensitive Groups", "Unhealthy", "Very Unhealthy", "Hazardous")
 
-      #waffle(d[1,],
-       #    rows = 14,
-        #   xlab = "\n1 square = 1 day",
-         #  colors = aqi_cat_colors[],
-          # size = 0.33,
-           #legend_pos = "bottom")
+      waffle(d[1,],
+           rows = 14,
+           xlab = "\n1 square = 1 day",
+           colors = aqi_cat_colors[],
+           size = 0.33,
+           legend_pos = "bottom")
 
-    #}
+    }
   })
 
 	
@@ -701,124 +653,63 @@ server <- function(input, output) {
   })
 
 
-	all_pollutant_data <- reactive({
+	
+
+
+
+  ################### pollutants ##########################3
+
+
+  # selected data for a selected selected county, state, and year
+  # w/o aqi.days
+  selected_area_pollutants_data <- reactive({
+		subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = c("Days.CO", "Days.NO2", "Days.Ozone", "Days.SO2", "Days.PM2.5", "Days.PM10"))
+	})
+
+
+  output$pollutants_waffle <- renderPlot({
+		d <- data.frame(selected_area_pollutants_data())
+		names(d) <- c("CO", "NO2", "Ozone", "SO2", "PM2.5", "PM10")
+
+    waffle(d[1,],
+           rows = 14,
+           xlab = "\n1 square = 1 day",
+           colors = mycolors[],
+           size = 0.33,
+           legend_pos = "bottom")
+})
+
+  all_pollutant_data <- reactive({
 		subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c("Year", "Days.with.AQI", "Days.CO", "Days.NO2", "Days.Ozone", "Days.SO2", "Days.PM2.5", "Days.PM10"))
 	})
 
-	#read in line graph for main pollutant over the year
-	output$pollutant_line <- renderPlot({
+  #read in line graph for main pollutant over the year
+  output$pollutant_line <- renderPlot({
 		data <- all_pollutant_data()
 		lines <- data.table(
-			data[, "Year"],
-			data[, "Days.CO"],
-			data[, "Days.NO2"],
-			data[, "Days.Ozone"],
-			data[, "Days.SO2"],
-			data[, "Days.PM2.5"],
-			data[, "Days.PM10"]
-		)
+      data[, "Year"],
+      data[, "Days.CO"],
+      data[, "Days.NO2"],
+      data[, "Days.Ozone"],
+      data[, "Days.SO2"],
+      data[, "Days.PM2.5"],
+      data[, "Days.PM10"]
+    )
 
-		ggplot(lines, aes(Year)) +
-		geom_line(size = 1, aes(y = Days.CO, color = "CO")) +
-		geom_line(size = 1, aes(y = Days.NO2, color = "NO2")) +
-		geom_line(size = 1, aes(y = Days.Ozone, color = "Ozone")) +
-		geom_line(size = 1, aes(y = Days.SO2, color = "SO2")) +
-		geom_line(size = 1, aes(y = Days.PM25, color = "PM25")) +
-		geom_line(size = 1, aes(y = Days.PM10, color = "PM10")) +
-		labs(x = "Year", y = "Number of Days", colour = "Pollutant") +
-		scale_color_manual(values = mycolors[]) +
-		theme(legend.position = "bottom", legend.direction = "horizontal")
+    ggplot(lines, aes(Year)) +
+    geom_line(size = 1, aes(y = Days.CO, color = "CO")) +
+    geom_line(size = 1, aes(y = Days.NO2, color = "NO2")) +
+    geom_line(size = 1, aes(y = Days.Ozone, color = "Ozone")) +
+    geom_line(size = 1, aes(y = Days.SO2, color = "SO2")) +
+    geom_line(size = 1, aes(y = Days.PM25, color = "PM25")) +
+    geom_line(size = 1, aes(y = Days.PM10, color = "PM10")) +
+    labs(x = "Year", y = "Number of Days", colour = "Pollutant") +
+    scale_color_manual(values = mycolors[]) +
+    theme(legend.position = "bottom", legend.direction = "horizontal")
 
-	})
-
-
-	
-	
+  })
 
 
-
-	comparison_data <- reactive({
-		d <- subset(aqi_data, aqi_data$State == input$state1 & aqi_data$County == input$county1 & aqi_data$Year == input$Year)
-		d2 <- rbind(d, subset(aqi_data, aqi_data$State == input$state2 & aqi_data$County == input$county2 & aqi_data$Year == input$Year))
-		d2
-
-	})
-
-
-	output$aqi_stacked <- renderPlot({
-		#d <- comparison_data()
-
-    #data_ <- data.frame(matrix(vector(), 0, 9, dimnames = list(c(), c("Good", "Moderate", "Unhealthy for Sensitive", "Unhealthy", "Very Unhealthy", "Hazardous", "Variable", "Fill"))), stringsAsFactors = F)
-
-		# change to percentages
-		#dt <- data.table(
-		#	Category = c("Good", "Moderate", "Unhealthy for Senstitive", "Unhealthy", "Very Unhealthy", "Hazardous"),
-		#	Loc1 = c(d[1, "Good.Days"], d[1, "Moderate.Days"], d[1, "Unhealthy.for.Sensitive.Groups.Days"], d[1, "Unhealthy.Days"], d[1, "Very.Unhealthy.Days"], d[1, "Hazardous.Days"]),
-		#	Loc2 = c(d[2, "Good.Days"], d[2, "Moderate.Days"], d[2, "Unhealthy.for.Sensitive.Groups.Days"], d[2, "Unhealthy.Days"], d[2, "Very.Unhealthy.Days"], d[2, "Hazardous.Days"])
-    #)
-		
-		
-
-		#dt.melt <- melt(dt, id.vars = "Category")
-
-		#ggplot(dt.melt, aes(x = Category, y = value, fill = variable)) +
-    #geom_bar(stat = "identity") +
-    #labs(y = "Value", x = "Category") 
-
-	})
-
-
-	p_location1_data <- reactive({
-		data.table(subset(aqi_data, aqi_data$State == input$state1 & aqi_data$County == input$county1))
-	})
-
-	p_location2_data <- reactive({
-		data.table(subset(aqi_data, aqi_data$State == input$state2 & aqi_data$County == input$county2))
-	})
-
-
-	output$pollutants_line <- renderPlot({
-		d1 <- p_location1_data()
-		d2 <- p_location2_data()
-
-		# change to percentages
-    dt <- data.table(
-			Year = c(1980:2019),
-			d1[, "Days.CO"],
-			d1[, "Days.NO2"],
-			d1[, "Days.Ozone"],
-			d1[, "Days.SO2"],
-			d1[, "Days.PM2.5"],
-			d1[, "Days.PM10"],
-			d2[, "Days.CO"],
-			d2[, "Days.NO2"],
-			d2[, "Days.Ozone"],
-			d2[, "Days.SO2"],
-			d2[, "Days.PM2.5"],
-			d2[, "Days.PM10"]
-		)
-
-		names(dt) <- c("Year", "CO_1", "NO2_1", "Ozone_1", "SO2_1", "PM2.5_1", "PM10_1", "CO_2", "NO2_2", "Ozone_2", "SO2_2", "PM2.5_2", "PM10_2")
-
-		ggplot(dt, aes(Year)) +
-		geom_line(size = 1, aes(y = CO_1, colour = "CO")) +
-		geom_line(size = 1, aes(y = NO2_1, colour = "NO2")) +
-		geom_line(size = 1, aes(y = Ozone_1, colour = "Ozone")) +
-		geom_line(size = 1, aes(y = SO2_1, colour = "SO2")) +
-		geom_line(size = 1, aes(y = PM2.5_1, colour = "PM2.5")) +
-		geom_line(size = 1, aes(y = PM10_1, colour = "PM10")) +
-		geom_line(size = 1, linetype = "dashed", aes(y = CO_2, colour = "CO")) +
-		geom_line(size = 1, linetype = "dashed", aes(y = NO2_2, colour = "NO2")) +
-		geom_line(size = 1, linetype = "dashed", aes(y = Ozone_2, colour = "Ozone")) +
-		geom_line(size = 1, linetype = "dashed", aes(y = SO2_2, colour = "SO2")) +
-		geom_line(size = 1, linetype = "dashed", aes(y = PM2.5_2, colour = "PM2.5")) +
-		geom_line(size = 1, linetype = "dashed", aes(y = PM10_2, colour = "PM10")) +
-		#scale_color_manual(values = mycolors[]) +
-		labs(x = "Year", y = "Value", colour = "Pollutant\n") +
-		theme(legend.position = "bottom", legend.direction = "horizontal") #+
-		#scale_linetype_manual(values = c("solid", "dashed"), labels = c(input$county1, input$county2))
-
-	})
 
 }
 
