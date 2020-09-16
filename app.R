@@ -14,8 +14,9 @@ library(data.table)
 #library(htmltools)
 library(waffle)
 library(ggiraph)
+library(data.table)
 
-packageVersion("waffle")
+packageVersion('waffle')
 
 library(jpeg)
 library(Rcpp) # for rasterGrob()
@@ -24,26 +25,15 @@ library(grid)
 library(viridis)
 library(hrbrthemes)
 
-source("getting_data.R")
+source('getting_data.R')
 
-
-aqi_data <- get_aqi_data()
-
-
-#aqi_data$State <- factor(aqi_data$State)
 
 # values for year selectInput
-years <- c(2019:1980)
+years <- c(2020:2000)
 
 # states available for the user to select
 states <- data.table(unique(aqi_data[, 1]))
 #levels(droplevels(states))
-
-
-# data for showing location on a map
-aqs2 <- read.csv("./data/aqs_sites.csv")
-aqs <- subset(aqs2, !is.na(Longitude) & !is.na(Latitude) & Longitude != 0 & Latitude != 0, select = c("Longitude", "Latitude", "Land.Use", "Location.Setting", "Address", "State.Name", "County.Name"))
-aqs <- data.table(aqs)
 
 
 last_selected_state <- reactiveVal(NULL)
@@ -51,44 +41,45 @@ last_selected_county <- reactiveVal(NULL)
 
 
 # silver, purple, orange, blue, green, gray
-mycolors <- c("#A9A9A9", "#7220B5", "#FF8930", "#0C9F0F", "#2763DB", "#444444")
+mycolors <- c('#A9A9A9', '#7220B5', '#FF8930', '#0C9F0F', '#2763DB', '#444444')
 
 # mustard, grey, orange, blue, white, black
-mycolors2 <- c("#ffd700", "#bcbcbc", "#ffa500", "#254290", "#ffffff", "#000000")
+mycolors2 <- c('#ffd700', '#bcbcbc', '#ffa500', '#254290', '#ffffff', '#000000')
 
 # green, blue, grey, mustard, orange, red
 # good, moderate, unhealty for s, unhealthy, v unhealthy, hazardous
-aqi_cat_colors <- c("#0b731c", "#254290", "#bcbcbc", "#ffd700", "#ffa500", "#9a0909")
+aqi_cat_colors <- c('#0b731c', '#254290', '#bcbcbc', '#ffd700', '#ffa500', '#9a0909')
 # R: 11 G: 115 B: 28
 # R: 37 G: 66 B: 144
 
 # black, dark green-blue, green-blue (color-blind friendly)
-cb_colors <- c("#212945", "#4b5c9b", "#a9b3d6")
+cb_colors <- c('#212945', '#4b5c9b', '#a9b3d6')
 
 # options for pollutant focusing
-pollutants <- c("CO", "NO2", "Ozone", "SO2", "PM2.5", "PM10")
+pollutants <- c('CO', 'NO2', 'Ozone', 'SO2', 'PM2.5', 'PM10')
 
 # options for changing the units
-units <- c("Metric", "Imperial")
+units <- c('Metric', 'Imperial')
 
 
 #######################################################################################################################################################################
 ######################################################################### dashboard ###################################################################################
 ui <- dashboardPage(
 
-  dashboardHeader(title = "Just Breathe"),
+  dashboardHeader(title = 'Just Breathe'),
 
   dashboardSidebar(
     disable = FALSE, collapsed = FALSE,
-    selectInput("Year", "Select a Year:", years, selected = 2019),
-		#selectInput("State", "Select a State: ", states),
-		uiOutput("State"),
-    uiOutput("County"),
-    textOutput("aqi_days"),
+    selectInput('Year', 'Select a Year:', years, selected = 2019),
+		#selectInput('State', 'Select a State: ', states),
+		uiOutput('State'),
+    uiOutput('County'),
+    textOutput('aqi_days'),
     sidebarMenu(
-      menuItem("Air Quality Index", tabName = "aqi_tab"),
-      menuItem("Pollutants", tabName = "pollutants_tab"),
-		  menuItem("About", tabName = "about")
+      menuItem('Air Quality Index', tabName = 'aqi_tab'),
+      menuItem('Pollutants', tabName = 'pollutants_tab'),
+      menuItem('Diseases', tabName = 'diseases_tab'),
+		  menuItem('About', tabName = 'about_tab')
 		)
 
   ),
@@ -96,49 +87,50 @@ ui <- dashboardPage(
   dashboardBody(
 		tags$head(
       # modify the theme using css code
-			tags$link(rel = "stylesheet", type = "text/css", href = "light_theme.css"),
-			tags$link(type ="text/javascript", href = "map.js")
+			tags$link(rel = 'stylesheet', type = 'text/css', href = 'light_theme.css'),
+			tags$link(type ='text/javascript', href = 'map.js')
     ),
 
    
     tabItems(
       # tab #1
-      tabItem("aqi_tab",
+      tabItem('aqi_tab',
         fluidRow(
           column(4, offset = 0,
-            box(title = "Locations", solidHeader = TRUE, status = "primary", width = NULL, leafletOutput("aqi_map", height = 500))
-			      #box(title = "AQI", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("aqi_scatter", height = 500))
+            box(title = 'Locations', solidHeader = TRUE, status = 'primary', width = NULL, leafletOutput('aqi_map', height = 500))
+			      #box(title = 'AQI', solidHeader = TRUE, status = 'primary', width = NULL, plotOutput('aqi_scatter', height = 500))
           ),
           column(4, offset = 0,
-            box(title = "AQI", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("aqi_waffle", height = 500))
+            box(title = 'AQI', solidHeader = TRUE, status = 'primary', width = NULL, plotOutput('aqi_waffle', height = 500))
           ),
           column(4, offset = 0,
-            box(title = "AQI", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("aqi_bubble_plot", height = 500))       
+            box(title = 'AQI', solidHeader = TRUE, status = 'primary', width = NULL, plotOutput('aqi_pie', height = 500))       
           )
         )
 
       ),
       # tab #2
-      tabItem("pollutants_tab",
+      tabItem('pollutants_tab',
 
         fluidRow(
           column(4, offset = 0,
-            #wellPanel(textOutput("aqi_days")),
+            #wellPanel(textOutput('aqi_days')),
             wellPanel(
-              selectInput("Pollutant", "Select a Pollutant to Focus on", pollutants, selected = pollutants[1]),
-              box(title = "Locations", solidHeader = TRUE, status = "primary", width = NULL, leafletOutput("map", height = 500))
+              #selectInput('Pollutant', 'Select a Pollutant to Focus on', pollutants, selected = pollutants[1]),
+              box(title = 'Pollutants', solidHeader = TRUE, status = 'primary', width = NULL, plotOutput('pollutants_waffle', height = 500))
             )
 		      ),
           column(8,
             wellPanel(
               fluidRow(
+                selectInput('Pollutant', 'Select a Pollutant to Focus on', pollutants, selected = pollutants[1])
               ),
               fluidRow(
                 column(6, offset = 0,
-                  box(title = "Pollutants", solidHeader = TRUE, status = "primary", width = NULL, plotOutput("pollutants_waffle", height = 500))
+                       box(title = 'Locations', solidHeader = TRUE, status = 'primary', width = NULL, leafletOutput('map', height = 500))
                 ),
                 column(6, offset = 0,
-                  box(title = "Days with Pollutant as Main Pollutant 1980-2019", solidHeader = TRUE, status = "primary", width = NULL, girafeOutput("top_pollutant_line", height = 500))
+                  box(title = 'Days with Pollutant as Main Pollutant 1980-2019', solidHeader = TRUE, status = 'primary', width = NULL, girafeOutput('top_pollutant_line', height = 500))
                 )
               )
             ) # end well panel
@@ -147,10 +139,15 @@ ui <- dashboardPage(
 
 
       ), # end tabItem
+      
+      
+      tabItem('diseases_tab'
+      
+      ), # end tabItem
 
 
       # tab #4
-      tabItem("about"
+      tabItem('about_tab'
 
       ) # end tabItem
 
@@ -169,7 +166,7 @@ server <- function(input, output) {
 
 
 	get_counties_with_aqi_days <- reactive({
-		unique(subset(aqi_data[, 2], aqi_data$Year == input$Year & aqi_data$State == input$State, select = c("County", "Days.with.AQI")))
+		unique(subset(aqi_data[, 2], aqi_data$Year == input$Year & aqi_data$State == input$State, select = c('County', 'Days.with.AQI')))
   })
 
 
@@ -185,8 +182,8 @@ server <- function(input, output) {
     states_w_data <- unique(subset(aqi_data, aqi_data$Year == input$Year, select = State))
 
     pickerInput(
-      inputId = "State",
-      label = "Select :",
+      inputId = 'State',
+      label = 'Select :',
       choices = all_states$State,
       choicesOpt = list(
         disabled = !rownames(all_states) %in% rownames(states_w_data)
@@ -210,8 +207,8 @@ server <- function(input, output) {
 
     #if (rownames(counties_w_data) %in% rownames(last_selected_county)) {
       pickerInput(
-        inputId = "County",
-        label = "Select: ",
+        inputId = 'County',
+        label = 'Select: ',
         choices = counties$County,
         choicesOpt = list(
           disabled = !rownames(counties) %in% rownames(counties_w_data)
@@ -227,13 +224,13 @@ server <- function(input, output) {
 	# change county list based on first location selected for comparison
 	output$county1 <- renderUI({
 		counties1 <- unique(subset(aqi_data[, 2], aqi_data$Year == input$Year & aqi_data$State == input$state1))
-		selectInput("county1", " ", counties1, selected = counties1[1])
+		selectInput('county1', ' ', counties1, selected = counties1[1])
 	})
 
 	# change county list based on second location selected for comparison
 	output$county2 <- renderUI({
 		counties2 <- unique(subset(aqi_data[, 2], aqi_data$Year == input$Year & aqi_data$State == input$state2))
-		selectInput("county2", " ", counties2, selected = counties2[1])
+		selectInput('county2', ' ', counties2, selected = counties2[1])
 	})
 
 
@@ -241,15 +238,15 @@ server <- function(input, output) {
 
 	# show number of days where aqi data was collected for selected location
 	output$aqi_days <- renderText({
-		x <- subset(aqi_data[, "Days.with.AQI"], aqi_data$Year == input$Year & aqi_data$State == input$State & aqi_data$County == input$County)
-		t <- paste("Number of Days with AQI Data Collected: ", x)
-		t <- paste(x, "/365 Days with Collected Data", sep = "")
+		x <- subset(aqi_data[, 'Days.with.AQI'], aqi_data$Year == input$Year & aqi_data$State == input$State & aqi_data$County == input$County)
+		t <- paste('Number of Days with AQI Data Collected: ', x)
+		t <- paste(x, '/365 Days with Collected Data', sep = '')
 		t
 	})
 
 
 	locations_for_state <- reactive({
-		d <- aqs[!duplicated(aqs[, c("State.Name", "County.Name")]),]
+		d <- aqs[!duplicated(aqs[, c('State.Name', 'County.Name')]),]
 		d <- subset(d, d$State.Name == input$State)
 	})
 
@@ -278,22 +275,22 @@ server <- function(input, output) {
 
 		#green, lighter green, yellow, orange, red, darker red
 
-		heat_colors <- c("#00ff00", "#b3ffb3", "#ffff00", "#ff8000", "#ff0000", "#b30000")
+		heat_colors <- c('#00ff00', '#b3ffb3', '#ffff00', '#ff8000', '#ff0000', '#b30000')
 
 		map <- leaflet() %>%
 			addTiles() %>%
 			addWMSTiles(
-				"http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi",
-				layers = "nexrad-n0r-900913",
-				options = WMSTileOptions(format = "image/png", transparent = TRUE),
-				attribution = "Weather data 2012 IEM Nexrad"
+				'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi',
+				layers = 'nexrad-n0r-900913',
+				options = WMSTileOptions(format = 'image/png', transparent = TRUE),
+				attribution = 'Weather data 2012 IEM Nexrad'
 			) %>%
 		#setView(lng = as.numeric(view_lng), lat = as.numeric(view_lat), zoom = 5) %>%
 		addLegend(
-				title = "<center>% of Days w/<br>Unhealthy Levels</center>",
-				position = "topright",
+				title = '<center>% of Days w/<br>Unhealthy Levels</center>',
+				position = 'topright',
 				colors = heat_colors,
-				labels = c("0-10", "11-20", "21-40", "41-65", "66-85", "86-100"),
+				labels = c('0-10', '11-20', '21-40', '41-65', '66-85', '86-100'),
 				opacity = 1
 			)
 
@@ -302,34 +299,34 @@ server <- function(input, output) {
 
 		d <- aqi_map_data()
 		df <- data.frame(
-			State = d[, "State"],
-			County = d[, "County"],
-			Days = d[, "Bad"]
+			State = d[, 'State'],
+			County = d[, 'County'],
+			Days = d[, 'Bad']
 		)
 
 		n <- numberOfCounties()
 
 		i = 1
 		while (i <= as.numeric(n)) {
-			vals <- subset(aqs, as.character(aqs$State.Name) == as.character(df[i, "State"]) & as.character(aqs$County.Name) == as.character(df[i, "County"]), select = Latitude:Longitude)
+			vals <- subset(aqs, as.character(aqs$State.Name) == as.character(df[i, 'State']) & as.character(aqs$County.Name) == as.character(df[i, 'County']), select = Latitude:Longitude)
 
 			if (df[i, 3] <= 10) {
-				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[1], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[1], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 			}
 			else if (df[i, 3] <= 20) {
-				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[2], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[2], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 			}
 			else if (df[i, 3] <= 40) {
-				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[3], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[3], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 			}
 			else if (df[i, 3] <= 65) {
-				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[4], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[4], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 			}
 			else if (df[i, 3] <= 85) {
-				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[5], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[5], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 			}
 			else if (df[i, 3] <= 100) {
-				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[6], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+				map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[6], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 			}
 			else {
 
@@ -343,14 +340,22 @@ server <- function(input, output) {
 
 	# aqi state data (for year? all years?)
 	aqi_state_data <- reactive({
-		subset(aqi_data, aqi_data$State == input$State, select = c("Year",
-																															 "County",
-																															 "Good.Days",
-																															 "Moderate.Days",
-																															 "Unhealthy.for.Sensitive.Groups.Days",
-																															 "Unhealthy.Days",
-																															 "Very.Unhealthy.Days",
-																															 "Hazardous.Days"))
+		subset(aqi_data, aqi_data$State == input$State, select = c('Year',
+																															 'County',
+																															 'Good.Days',
+																															 'Moderate.Days',
+																															 'Unhealthy.for.Sensitive.Groups.Days',
+																															 'Unhealthy.Days',
+																															 'Very.Unhealthy.Days',
+																															 'Hazardous.Days'))
+	})
+	
+	
+	
+	
+	output$aqi_pie <- renderPlot({
+	  
+	  
 	})
 
 
@@ -365,8 +370,8 @@ server <- function(input, output) {
       geom_point(aes(x = Year, y = Very.Unhealthy.Days, color = 'Very Unhealthy'), size = 3) +
       geom_point(aes(x = Year, y = Hazardous.Days, color = 'Hazardous'), size = 3) +
       scale_color_manual(values = aqi_cat_colors[]) +
-      labs(x = "Year", y = "Number of Days", colour = NULL) +
-      theme(legend.position = "bottom", legend.direction = "horizontal") #+
+      labs(x = 'Year', y = 'Number of Days', colour = NULL) +
+      theme(legend.position = 'bottom', legend.direction = 'horizontal') #+
       #guides(colour = guide_legend(override.aes = list(size = 5)))
 
 	})
@@ -374,7 +379,7 @@ server <- function(input, output) {
 
 	pollutant_map_data <- reactive({
 		n <- numberOfCounties()
-		pollutant <- paste("Days.", input$Pollutant, sep = "")
+		pollutant <- paste('Days.', input$Pollutant, sep = '')
 		percentages <- subset(aqi_data, aqi_data$Year == input$Year & aqi_data$State == input$State)
 		percentages$Days <- percentages[[pollutant]]
 		d <- percentages[order(percentages$Days, decreasing = TRUE),]
@@ -392,7 +397,7 @@ server <- function(input, output) {
 
 		#green, lighter green, yellow, orange, red, darker red
 
-    heat_colors <- c("#00ff00", "#b3ffb3", "#ffff00", "#ff8000", "#ff0000", "#b30000")
+    heat_colors <- c('#00ff00', '#b3ffb3', '#ffff00', '#ff8000', '#ff0000', '#b30000')
     # r    g    b
     # 0    255  0     green
     # 179  255  179
@@ -405,24 +410,24 @@ server <- function(input, output) {
 		map <- leaflet() %>%
 			addTiles() %>%
 			addWMSTiles(
-				"http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi",
-				layers = "nexrad-n0r-900913",
-				options = WMSTileOptions(format = "image/png", transparent = TRUE),
-				attribution = "Weather data 2012 IEM Nexrad"
+				'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi',
+				layers = 'nexrad-n0r-900913',
+				options = WMSTileOptions(format = 'image/png', transparent = TRUE),
+				attribution = 'Weather data 2012 IEM Nexrad'
 			) %>%
 		#setView(lng = as.numeric(view_lng), lat = as.numeric(view_lat), zoom = 5) %>%
 		addLegend(
-				title = "<center>% of Days w/<br>Unhealthy Levels</center>",
-				position = "topright",
+				title = '<center>% of Days w/<br>Unhealthy Levels</center>',
+				position = 'topright',
 				colors = heat_colors,
-				labels = c("0-10", "11-20", "21-40", "41-65", "66-85", "86-100"),
+				labels = c('0-10', '11-20', '21-40', '41-65', '66-85', '86-100'),
 				opacity = 1
 			)
 
 
 		# m %>% clearBounds()  # world view
 
-		if (input$Pollutant == "AQI") {
+		if (input$Pollutant == 'AQI') {
 
 
 
@@ -431,35 +436,35 @@ server <- function(input, output) {
 
 			d <- pollutant_map_data()
 			df <- data.frame(
-				State = d[, "State"],
-				County = d[, "County"],
-				Days = d[, "Days"]
+				State = d[, 'State'],
+				County = d[, 'County'],
+				Days = d[, 'Days']
 			)
 
 			n <- numberOfCounties()
 
 			i = 1
 			while (i <= as.numeric(n)) {
-				vals <- subset(aqs, as.character(aqs$State.Name) == as.character(df[i, "State"]) & as.character(aqs$County.Name) == as.character(df[i, "County"]), select = Latitude:Longitude)
+				vals <- subset(aqs, as.character(aqs$State.Name) == as.character(df[i, 'State']) & as.character(aqs$County.Name) == as.character(df[i, 'County']), select = Latitude:Longitude)
 				pollutant = input$Pollutant
 
 				if (df[i, 3] <= 10) {
-					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[1], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[1], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 				}
 				else if (df[i, 3] <= 20) {
-					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[2], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[2], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 				}
 				else if (df[i, 3] <= 40) {
-					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[3], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[3], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 				}
 				else if (df[i, 3] <= 65) {
-					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[4], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[4], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 				}
 				else if (df[i, 3] <= 85) {
-					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[5], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[5], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 				}
 				else if (df[i, 3] <= 100) {
-					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[6], label = paste(paste(df$County[i], "County", sep = " "), df$State[i], sep = ", "))
+					map <- addCircleMarkers(map, lng = as.numeric(vals[1, 2]), lat = as.numeric(vals[1, 1]), stroke = FALSE, fillOpacity = 0.7, color = heat_colors[6], label = paste(paste(df$County[i], 'County', sep = ' '), df$State[i], sep = ', '))
 				}
 				else {
 
@@ -500,7 +505,7 @@ server <- function(input, output) {
 
 
 		#location <- subset(aqs, round(aqs$Longitude, 3) == round(view_lng, 3) & round(aqs$Latitude, 3) == round(view_lat, 3), select = State.Name:County.Name)[1, ]
-		#updateSelectInput("State", selected = as.character(location[[1]]))
+		#updateSelectInput('State', selected = as.character(location[[1]]))
 
 	})
 
@@ -511,58 +516,58 @@ server <- function(input, output) {
 	
 	user_selected_pollutant_data <- reactive({
 	  #pol <- user_selected_pol()
-    pol <- paste("Days.", input$Pollutant, sep = "")
-	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c("Year", pol))
+    pol <- paste('Days.', input$Pollutant, sep = '')
+	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c('Year', pol))
 	})
 
 
 	user_selected_aqi_data <- reactive({
-	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select(c("Year",
-	                                                                                                     "Good.Days",
-	                                                                                                     "Moderate.Days",
-	                                                                                                     "Unhealthy.for.Sensitive.Groups.Days",
-	                                                                                                     "Unhealthy.Days",
-	                                                                                                     "Very.Unhealthy.Days",
-	                                                                                                     "Hazardous.Days")))
+	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select(c('Year',
+	                                                                                                     'Good.Days',
+	                                                                                                     'Moderate.Days',
+	                                                                                                     'Unhealthy.for.Sensitive.Groups.Days',
+	                                                                                                     'Unhealthy.Days',
+	                                                                                                     'Very.Unhealthy.Days',
+	                                                                                                     'Hazardous.Days')))
 	})
 	
 	
 	# selected pollutant over the years
 	output$top_pollutant_line <- renderGirafe({
-    if (input$Pollutant == "AQI") {
+    if (input$Pollutant == 'AQI') {
 	    # bar plot
 	    d <- user_selected_aqi_data()
 	    
 	    dt <- data.table(
-	      d[, "Year"],
-	      d[, "Good.Days"],
-	      d[, "Moderate.Days"],
-	      d[, "Unhealthy.for.Sensitive.Groups.Days"],
-	      d[, "Unhealthy.Days"],
-	      d[, "Very.Unhealthy.Days"],
-	      d[, "Hazardous.Days"]
+	      d[, 'Year'],
+	      d[, 'Good.Days'],
+	      d[, 'Moderate.Days'],
+	      d[, 'Unhealthy.for.Sensitive.Groups.Days'],
+	      d[, 'Unhealthy.Days'],
+	      d[, 'Very.Unhealthy.Days'],
+	      d[, 'Hazardous.Days']
 	    )
 	  }
 	  else {
 	  d <- user_selected_pollutant_data()
 	  
 	  dt <- data.table(
-	    d[, "Year"],
+	    d[, 'Year'],
 	    d[, 2]
 	  )
 	  
 	  #dt[, eval(selected_pol)]
 	  
 	  #selected_pol <- user_selected_pol()
-    selected_pol <- paste("Days.", input$Pollutant, sep = "")
+    selected_pol <- paste('Days.', input$Pollutant, sep = '')
 	  line_color <- set_line_color(selected_pol)
 	  
 	  gg <- ggplot(dt, aes(Year)) +
 	    geom_line(color = line_color, size = 1, aes_string(y = selected_pol)) +
 	    geom_point(aes_string(y = selected_pol)) +
-	    labs(x = "Year", y = "Number of Days")
+	    labs(x = 'Year', y = 'Number of Days')
 	  #scale_color_manual(values = mycolors[]) +
-	  #theme(legend.position = "bottom", legend.direction = "horizontal")
+	  #theme(legend.position = 'bottom', legend.direction = 'horizontal')
 	  
 	  gg1 <- gg + geom_point_interactive(aes_string(y = selected_pol, tooltip = dt[[selected_pol]]), size = 2)
 	  girafe(ggobj = gg1)
@@ -577,32 +582,32 @@ server <- function(input, output) {
 
 
   selected_area_aqi_data <- reactive({
-	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = c("Good.Days", "Moderate.Days", "Unhealthy.for.Sensitive.Groups.Days", "Unhealthy.Days", "Very.Unhealthy.Days", "Hazardous.Days"))
+	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = c('Good.Days', 'Moderate.Days', 'Unhealthy.for.Sensitive.Groups.Days', 'Unhealthy.Days', 'Very.Unhealthy.Days', 'Hazardous.Days'))
 	})
 	
 	
 	output$aqi_waffle <- renderPlot({
     d <- data.frame(selected_area_aqi_data())
     if (is.null(d)) {
-			paste("no data")
+			paste('no data')
     }
 
     else {
-      names(d) <- c("Good", "Moderate", "Unhealthy for Sensitive Groups", "Unhealthy", "Very Unhealthy", "Hazardous")
+      names(d) <- c('Good', 'Moderate', 'Unhealthy for Sensitive Groups', 'Unhealthy', 'Very Unhealthy', 'Hazardous')
 
       waffle(d[1,],
            rows = 14,
-           xlab = "\n1 square = 1 day",
+           xlab = '\n1 square = 1 day',
            colors = aqi_cat_colors[],
            size = 0.33,
-           legend_pos = "bottom")
+           legend_pos = 'bottom')
 
     }
   })
 
 	
 	selected_aqi_for_year <- reactive({
-	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c("Year", "Days.with.AQI", "Good.Days", "Moderate.Days", "Unhealthy.for.Sensitive.Groups.Days", "Unhealthy.Days", "Very.Unhealthy.Days", "Hazardous.Days"))
+	  subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c('Year', 'Days.with.AQI', 'Good.Days', 'Moderate.Days', 'Unhealthy.for.Sensitive.Groups.Days', 'Unhealthy.Days', 'Very.Unhealthy.Days', 'Hazardous.Days'))
   })
 	
 	
@@ -615,14 +620,14 @@ server <- function(input, output) {
 	    Bad = d$Bad
     )
 
-    img <- jpeg::readJPEG("background.jpg")
-    sectioned_background <- rasterGrob(img, width = unit(1, "npc"), height = unit(1, "npc"), interpolate = FALSE)
+    img <- jpeg::readJPEG('background.jpg')
+    sectioned_background <- rasterGrob(img, width = unit(1, 'npc'), height = unit(1, 'npc'), interpolate = FALSE)
     
     ggplot(lines, aes(Year)) +
       annotation_custom(sectioned_background, - Inf, Inf, - Inf, Inf) +
-      geom_line(size = 1, aes(y = Bad), color = "white") +
-      geom_point(aes(y = Bad), size = 3, color = "white") +
-      labs(x = "Year", y = "% of Days with Hazardous\nor Unhealthy Levels", colour = "Pollutant") +
+      geom_line(size = 1, aes(y = Bad), color = 'white') +
+      geom_point(aes(y = Bad), size = 3, color = 'white') +
+      labs(x = 'Year', y = '% of Days with Hazardous\nor Unhealthy Levels', colour = 'Pollutant') +
       scale_y_continuous(labels = c(0:10) * 10, breaks = c(0:10) * 10, limits = c(0, 100), expand = c(0,0))
   })
 
@@ -644,9 +649,9 @@ server <- function(input, output) {
 
     ggplot(lines, aes(x = Year, y = Bad)) +
       geom_point(aes(color = Bad, size = TotalDays), alpha = 0.5) +
-      scale_color_gradient(low = "#0000db", high = "#e60000", name = "% of Days w/\nUnhealthy Levels", limits = c(0, 100)) +
-      scale_size(range = c(2, 15), name = "Days w/\nCollected Data") +
-      theme(legend.position = "bottom", legend.box = "horizontal", legend.direction = "vertical", legend.justification = "center", legend.title.align = 0.5) +
+      scale_color_gradient(low = '#0000db', high = '#e60000', name = '% of Days w/\nUnhealthy Levels', limits = c(0, 100)) +
+      scale_size(range = c(2, 15), name = 'Days w/\nCollected Data') +
+      theme(legend.position = 'bottom', legend.box = 'horizontal', legend.direction = 'vertical', legend.justification = 'center', legend.title.align = 0.5) +
       #coord_equal(expand = TRUE) + 
       scale_y_continuous(labels = c(0:10) * 10, breaks = c(0:10) * 10, limits = c(0, 100))
 
@@ -663,49 +668,49 @@ server <- function(input, output) {
   # selected data for a selected selected county, state, and year
   # w/o aqi.days
   selected_area_pollutants_data <- reactive({
-		subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = c("Days.CO", "Days.NO2", "Days.Ozone", "Days.SO2", "Days.PM2.5", "Days.PM10"))
+		subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County) & (aqi_data$Year) == (input$Year), select = c('Days.CO', 'Days.NO2', 'Days.Ozone', 'Days.SO2', 'Days.PM2.5', 'Days.PM10'))
 	})
 
 
   output$pollutants_waffle <- renderPlot({
 		d <- data.frame(selected_area_pollutants_data())
-		names(d) <- c("CO", "NO2", "Ozone", "SO2", "PM2.5", "PM10")
+		names(d) <- c('CO', 'NO2', 'Ozone', 'SO2', 'PM2.5', 'PM10')
 
     waffle(d[1,],
            rows = 14,
-           xlab = "\n1 square = 1 day",
+           xlab = '\n1 square = 1 day',
            colors = mycolors[],
            size = 0.33,
-           legend_pos = "bottom")
+           legend_pos = 'bottom')
 })
 
   all_pollutant_data <- reactive({
-		subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c("Year", "Days.with.AQI", "Days.CO", "Days.NO2", "Days.Ozone", "Days.SO2", "Days.PM2.5", "Days.PM10"))
+		subset(aqi_data, (aqi_data$State) == (input$State) & (aqi_data$County) == (input$County), select = c('Year', 'Days.with.AQI', 'Days.CO', 'Days.NO2', 'Days.Ozone', 'Days.SO2', 'Days.PM2.5', 'Days.PM10'))
 	})
 
   #read in line graph for main pollutant over the year
   output$pollutant_line <- renderPlot({
 		data <- all_pollutant_data()
 		lines <- data.table(
-      data[, "Year"],
-      data[, "Days.CO"],
-      data[, "Days.NO2"],
-      data[, "Days.Ozone"],
-      data[, "Days.SO2"],
-      data[, "Days.PM2.5"],
-      data[, "Days.PM10"]
+      data[, 'Year'],
+      data[, 'Days.CO'],
+      data[, 'Days.NO2'],
+      data[, 'Days.Ozone'],
+      data[, 'Days.SO2'],
+      data[, 'Days.PM2.5'],
+      data[, 'Days.PM10']
     )
 
     ggplot(lines, aes(Year)) +
-    geom_line(size = 1, aes(y = Days.CO, color = "CO")) +
-    geom_line(size = 1, aes(y = Days.NO2, color = "NO2")) +
-    geom_line(size = 1, aes(y = Days.Ozone, color = "Ozone")) +
-    geom_line(size = 1, aes(y = Days.SO2, color = "SO2")) +
-    geom_line(size = 1, aes(y = Days.PM25, color = "PM25")) +
-    geom_line(size = 1, aes(y = Days.PM10, color = "PM10")) +
-    labs(x = "Year", y = "Number of Days", colour = "Pollutant") +
+    geom_line(size = 1, aes(y = Days.CO, color = 'CO')) +
+    geom_line(size = 1, aes(y = Days.NO2, color = 'NO2')) +
+    geom_line(size = 1, aes(y = Days.Ozone, color = 'Ozone')) +
+    geom_line(size = 1, aes(y = Days.SO2, color = 'SO2')) +
+    geom_line(size = 1, aes(y = Days.PM25, color = 'PM25')) +
+    geom_line(size = 1, aes(y = Days.PM10, color = 'PM10')) +
+    labs(x = 'Year', y = 'Number of Days', colour = 'Pollutant') +
     scale_color_manual(values = mycolors[]) +
-    theme(legend.position = "bottom", legend.direction = "horizontal")
+    theme(legend.position = 'bottom', legend.direction = 'horizontal')
 
   })
 
@@ -720,17 +725,17 @@ server <- function(input, output) {
 
 
 set_line_color <- function(pollutant) {
-  if(pollutant == "Days.CO")
+  if(pollutant == 'Days.CO')
     retval <- mycolors[1]
-  else if (pollutant == "Days.NO2")
+  else if (pollutant == 'Days.NO2')
     retval <- mycolors[2]
-  else if (pollutant == "Days.Ozone")
+  else if (pollutant == 'Days.Ozone')
     retval <- mycolors[3]
-  else if (pollutant == "Days.SO2")
+  else if (pollutant == 'Days.SO2')
     retval <- mycolors[4]
-  else if (pollutant == "Days.PM2.5")
+  else if (pollutant == 'Days.PM2.5')
     retval <- mycolors[5]
-  else if (pollutant == "Days.PM10")
+  else if (pollutant == 'Days.PM10')
     retval <- mycolors[6]
 
   return(retval)
